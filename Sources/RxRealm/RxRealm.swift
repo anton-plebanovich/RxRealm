@@ -100,7 +100,7 @@ public struct RealmChangeset {
 }
 
 public extension ObservableType where Element: NotificationEmitter {
-  @available(*, deprecated, renamed: "collection(from:synchronousStart:)")
+  @available(*, deprecated, renamed: "collection(from:)")
   static func from(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<Element> {
     return self.collection(from: collection)
   }
@@ -110,25 +110,19 @@ public extension ObservableType where Element: NotificationEmitter {
    The observable emits an initial value upon subscription.
 
    - parameter from: A Realm collection of type `Element`: either `Results`, `List`, `LinkingObjects` or `AnyRealmCollection`.
-   - parameter synchronousStart: whether the resulting `Observable` should emit its first element synchronously (e.g. better for UI bindings)
    - parameter queue: The serial dispatch queue to receive notification on. If `nil`, notifications are delivered to the current thread.
 
    - returns: `Observable<Element>`, e.g. when called on `Results<Model>` it will return `Observable<Results<Model>>`, on a `List<User>` it will return `Observable<List<User>>`, etc.
    */
-  static func collection(from collection: Element, synchronousStart: Bool = true, on queue: DispatchQueue? = nil)
+  static func collection(from collection: Element, on queue: DispatchQueue? = nil)
     -> Observable<Element> {
     return Observable.create { observer in
-      if synchronousStart {
-        observer.onNext(collection)
-      }
-
       let token = collection.observe(on: queue) { changeset in
 
         let value: Element
 
         switch changeset {
         case let .initial(latestValue):
-          guard !synchronousStart else { return }
           value = latestValue
 
         case let .update(latestValue, _, _, _):
@@ -148,7 +142,7 @@ public extension ObservableType where Element: NotificationEmitter {
     }
   }
 
-  @available(*, deprecated, renamed: "array(from:synchronousStart:)")
+  @available(*, deprecated, renamed: "array(from:)")
   static func arrayFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<[Element.ElementType]> {
     return array(from: collection)
   }
@@ -158,18 +152,17 @@ public extension ObservableType where Element: NotificationEmitter {
    The result emits an array containing all objects from the source collection.
 
    - parameter from: A Realm collection of type `Element`: either `Results`, `List`, `LinkingObjects` or `AnyRealmCollection`.
-   - parameter synchronousStart: whether the resulting Observable should emit its first element synchronously (e.g. better for UI bindings)
    - parameter queue: The serial dispatch queue to receive notification on. If `nil`, notifications are delivered to the current thread.
 
    - returns: `Observable<Array<Element.Element>>`, e.g. when called on `Results<Model>` it will return `Observable<Array<Model>>`, on a `List<User>` it will return `Observable<Array<User>>`, etc.
    */
-  static func array(from collection: Element, synchronousStart: Bool = true, on queue: DispatchQueue? = nil)
+  static func array(from collection: Element, on queue: DispatchQueue? = nil)
     -> Observable<[Element.ElementType]> {
-    return Observable.collection(from: collection, synchronousStart: synchronousStart, on: queue)
+    return Observable.collection(from: collection, on: queue)
       .map { $0.toArray() }
   }
 
-  @available(*, deprecated, renamed: "changeset(from:synchronousStart:)")
+  @available(*, deprecated, renamed: "changeset(from:)")
   static func changesetFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<(AnyRealmCollection<Element.ElementType>, RealmChangeset?)> {
     return changeset(from: collection)
   }
@@ -182,23 +175,17 @@ public extension ObservableType where Element: NotificationEmitter {
    Each following emit will include a `RealmChangeset` with the indexes inserted, deleted or modified.
 
    - parameter from: A Realm collection of type `Element`: either `Results`, `List`, `LinkingObjects` or `AnyRealmCollection`.
-   - parameter synchronousStart: whether the resulting Observable should emit its first element synchronously (e.g. better for UI bindings)
    - parameter queue: The serial dispatch queue to receive notification on. If `nil`, notifications are delivered to the current thread.
 
    - returns: `Observable<(AnyRealmCollection<Element.Element>, RealmChangeset?)>`
    */
-  static func changeset(from collection: Element, synchronousStart: Bool = true, on queue: DispatchQueue? = nil)
+  static func changeset(from collection: Element, on queue: DispatchQueue? = nil)
     -> Observable<(AnyRealmCollection<Element.ElementType>, RealmChangeset?)> {
     return Observable.create { observer in
-      if synchronousStart {
-        observer.onNext((collection.toAnyCollection(), nil))
-      }
-
       let token = collection.toAnyCollection().observe(on: queue) { changeset in
 
         switch changeset {
         case let .initial(value):
-          guard !synchronousStart else { return }
           observer.onNext((value, nil))
         case let .update(value, deletes, inserts, updates):
           observer.onNext((value, RealmChangeset(deleted: deletes, inserted: inserts, updated: updates)))
@@ -214,7 +201,7 @@ public extension ObservableType where Element: NotificationEmitter {
     }
   }
 
-  @available(*, deprecated, renamed: "arrayWithChangeset(from:synchronousStart:)")
+  @available(*, deprecated, renamed: "arrayWithChangeset(from:)")
   static func changesetArrayFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<([Element.ElementType], RealmChangeset?)> {
     return arrayWithChangeset(from: collection)
   }
@@ -229,12 +216,11 @@ public extension ObservableType where Element: NotificationEmitter {
    Each following emit will include a `RealmChangeset` with the indexes inserted, deleted or modified.
 
    - parameter from: A Realm collection of type `Element`: either `Results`, `List`, `LinkingObjects` or `AnyRealmCollection`.
-   - parameter synchronousStart: whether the resulting Observable should emit its first element synchronously (e.g. better for UI bindings)
    - parameter queue: The serial dispatch queue to receive notification on. If `nil`, notifications are delivered to the current thread.
 
    - returns: `Observable<(Array<Element.Element>, RealmChangeset?)>`
    */
-  static func arrayWithChangeset(from collection: Element, synchronousStart: Bool = true, on queue: DispatchQueue? = nil)
+  static func arrayWithChangeset(from collection: Element, on queue: DispatchQueue? = nil)
     -> Observable<([Element.ElementType], RealmChangeset?)> {
     return Observable.changeset(from: collection, on: queue)
       .map { ($0.toArray(), $1) }
