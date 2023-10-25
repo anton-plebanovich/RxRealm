@@ -103,7 +103,7 @@ public struct RealmChangeset {
 
 public extension ObservableType where Element: NotificationEmitter {
   @available(*, deprecated, renamed: "collection(from:)")
-  static func from(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<Element> {
+  static func from(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> RxSwift.Observable<Element> {
     return self.collection(from: collection)
   }
 
@@ -119,8 +119,8 @@ public extension ObservableType where Element: NotificationEmitter {
    - returns: `Observable<Element>`, e.g. when called on `Results<Model>` it will return `Observable<Results<Model>>`, on a `List<User>` it will return `Observable<List<User>>`, etc.
    */
   static func collection(from collection: Element, keyPaths: [String]? = nil, on queue: DispatchQueue? = nil)
-    -> Observable<Element> {
-    return Observable.create { observer in
+  -> RxSwift.Observable<Element> {
+    return RxSwift.Observable.create { observer in
       let token = collection.observe(keyPaths: keyPaths, on: queue) { changeset in
 
         let value: Element
@@ -147,7 +147,7 @@ public extension ObservableType where Element: NotificationEmitter {
   }
 
   @available(*, deprecated, renamed: "array(from:)")
-  static func arrayFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<[Element.ElementType]> {
+  static func arrayFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> RxSwift.Observable<[Element.ElementType]> {
     return array(from: collection)
   }
 
@@ -161,13 +161,13 @@ public extension ObservableType where Element: NotificationEmitter {
    - returns: `Observable<Array<Element.Element>>`, e.g. when called on `Results<Model>` it will return `Observable<Array<Model>>`, on a `List<User>` it will return `Observable<Array<User>>`, etc.
    */
   static func array(from collection: Element, on queue: DispatchQueue? = nil)
-    -> Observable<[Element.ElementType]> {
-    return Observable.collection(from: collection, on: queue)
+  -> RxSwift.Observable<[Element.ElementType]> {
+    return RxSwift.Observable.collection(from: collection, on: queue)
       .map { $0.toArray() }
   }
 
   @available(*, deprecated, renamed: "changeset(from:)")
-  static func changesetFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<(AnyRealmCollection<Element.ElementType>, RealmChangeset?)> {
+  static func changesetFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> RxSwift.Observable<(AnyRealmCollection<Element.ElementType>, RealmChangeset?)> {
     return changeset(from: collection)
   }
 
@@ -184,8 +184,8 @@ public extension ObservableType where Element: NotificationEmitter {
    - returns: `Observable<(AnyRealmCollection<Element.Element>, RealmChangeset?)>`
    */
   static func changeset(from collection: Element, on queue: DispatchQueue? = nil)
-    -> Observable<(AnyRealmCollection<Element.ElementType>, RealmChangeset?)> {
-    return Observable.create { observer in
+  -> RxSwift.Observable<(AnyRealmCollection<Element.ElementType>, RealmChangeset?)> {
+    return RxSwift.Observable.create { observer in
       let token = collection.toAnyCollection().observe(on: queue) { changeset in
 
         switch changeset {
@@ -206,7 +206,7 @@ public extension ObservableType where Element: NotificationEmitter {
   }
 
   @available(*, deprecated, renamed: "arrayWithChangeset(from:)")
-  static func changesetArrayFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<([Element.ElementType], RealmChangeset?)> {
+  static func changesetArrayFrom(_ collection: Element, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> RxSwift.Observable<([Element.ElementType], RealmChangeset?)> {
     return arrayWithChangeset(from: collection)
   }
 
@@ -225,15 +225,15 @@ public extension ObservableType where Element: NotificationEmitter {
    - returns: `Observable<(Array<Element.Element>, RealmChangeset?)>`
    */
   static func arrayWithChangeset(from collection: Element, on queue: DispatchQueue? = nil)
-    -> Observable<([Element.ElementType], RealmChangeset?)> {
-    return Observable.changeset(from: collection, on: queue)
+  -> RxSwift.Observable<([Element.ElementType], RealmChangeset?)> {
+    return RxSwift.Observable.changeset(from: collection, on: queue)
       .map { ($0.toArray(), $1) }
   }
 }
 
-public extension Observable {
+public extension RxSwift.Observable {
   @available(*, deprecated, renamed: "from(realm:)")
-  static func from(_ realm: Realm, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> Observable<(Realm, Realm.Notification)> {
+  static func from(_ realm: Realm, scheduler: ImmediateSchedulerType = CurrentThreadScheduler.instance) -> RxSwift.Observable<(Realm, Realm.Notification)> {
     return from(realm: realm)
   }
 
@@ -251,8 +251,8 @@ public extension Observable {
    - parameter realm: A Realm instance
    - returns: `Observable<(Realm, Realm.Notification)>`, which you can subscribe to
    */
-  static func from(realm: Realm) -> Observable<(Realm, Realm.Notification)> {
-    return Observable<(Realm, Realm.Notification)>.create { observer in
+  static func from(realm: Realm) -> RxSwift.Observable<(Realm, Realm.Notification)> {
+    return RxSwift.Observable<(Realm, Realm.Notification)>.create { observer in
       let token = realm.observe { (notification: Realm.Notification, realm: Realm) in
         observer.onNext((realm, notification))
       }
@@ -481,9 +481,9 @@ public extension Reactive where Base == Realm {
 
 // MARK: Realm Object type extensions
 
-public extension Observable where Element: Object {
+public extension RxSwift.Observable where Element: Object {
   @available(*, deprecated, renamed: "from(object:)")
-  static func from(_ object: Element) -> Observable<Element> {
+  static func from(_ object: Element) -> RxSwift.Observable<Element> {
     return from(object: object)
   }
 
@@ -497,8 +497,8 @@ public extension Observable where Element: Object {
    */
 
   static func from(object: Element, emitInitialValue: Bool = true,
-                   properties: [String]? = nil) -> Observable<Element> {
-    return Observable<Element>.create { observer in
+                   properties: [String]? = nil) -> RxSwift.Observable<Element> {
+    return RxSwift.Observable<Element>.create { observer in
       if emitInitialValue {
         observer.onNext(object)
       }
@@ -531,8 +531,8 @@ public extension Observable where Element: Object {
    - returns: `Observable<PropertyChange>` will emit any time a change is detected on the object
    */
 
-  static func propertyChanges(object: Element) -> Observable<PropertyChange> {
-    return Observable<PropertyChange>.create { observer in
+  static func propertyChanges(object: Element) -> RxSwift.Observable<PropertyChange> {
+    return RxSwift.Observable<PropertyChange>.create { observer in
       let token = object.observe { change in
         switch change {
         case let .change(_, changes):

@@ -1,3 +1,4 @@
+platform :ios, '14.0'
 source "https://cdn.cocoapods.org/"
 project "RxRealmDemo.xcodeproj"
 use_frameworks!
@@ -11,7 +12,6 @@ def common_tests
 end
 
 target "RxRealmDemo-iOS" do
-  platform :ios, "11.0"
   common
 end
 
